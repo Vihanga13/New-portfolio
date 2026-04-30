@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== CUSTOM UTILITIES ==================== */
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-black-deep text-white-pure font-sans overflow-x-hidden;
+    cursor: none;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Custom cursor */
+  #custom-cursor {
+    @apply fixed w-10 h-10 pointer-events-none z-[9999] mix-blend-screen;
+    display: none;
+  }
+
+  #custom-cursor.active {
+    display: block;
+  }
+
+  .cursor-crosshair {
+    @apply absolute w-full h-full border-2 border-white-pure rounded-full;
+    opacity: 0.6;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .cursor-reticle {
+    @apply absolute w-1 h-1 bg-white-pure rounded-full top-1/2 left-1/2;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  }
+}
+
+@layer components {
+  /* Film Grain Overlay */
+  .film-grain {
+    @apply absolute inset-0 pointer-events-none opacity-[0.08];
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' seed='2' /%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
+    background-size: 300px 300px;
+    animation: film-grain 0.15s steps(1) infinite;
+  }
+
+  /* Light Leak Effect */
+  .light-leak {
+    @apply absolute rounded-full opacity-0 pointer-events-none;
+    mix-blend-mode: screen;
+  }
+
+  /* Cinematic Section */
+  .cinematic-section {
+    @apply relative w-full min-h-screen flex items-center justify-center overflow-hidden;
+  }
+
+  /* Section Container */
+  .section-container {
+    @apply max-w-[1400px] w-full mx-auto relative z-10;
+  }
+
+  /* Parallax Layer */
+  .parallax-layer {
+    @apply relative;
+  }
+
+  /* Cutout Image */
+  .cutout-image {
+    @apply relative overflow-hidden;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+
+  /* Section Title */
+  .section-title {
+    @apply text-6xl font-serif font-light tracking-tighter mb-20 opacity-0;
+    animation: fade-in-up 0.8s ease-out forwards;
+  }
+
+  /* Fade In On Scroll */
+  .fade-in-on-scroll {
+    @apply opacity-0;
+  }
+}
+
+/* ==================== SMOOTH SCROLL BEHAVIOR ==================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ==================== CINEMA MODE ==================== */
+
+body.cinema-mode {
+  --color-black-deep: #000000;
+  --color-black-primary: #0a0a0a;
+  --color-black-secondary: #1a1a1a;
+}
+
+/* ==================== DUST PARTICLES ==================== */
+
+.dust-particle {
+  @apply fixed pointer-events-none;
+  border-radius: 50%;
+}
