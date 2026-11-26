@@ -61,7 +61,7 @@ export function AboutSection() {
 
   return (
     <section id="about" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:gap-16">
           {/* Left: portrait, stays in view while the text scrolls */}
           <div className="lg:col-span-4">

@@ -1,11 +1,21 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowUpRight, Command, Menu, Palette, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, Command, X } from "lucide-react";
 import { AccentTheme, siteConfig } from "@/data/site";
 import { useAccentTheme } from "./ThemeProvider";
 import { MagneticButton } from "./ui/MagneticButton";
-import { ScrambleText } from "./ui/ScrambleText";
+
+/**
+ * NAVBAR CONCEPT: "It knows where you are"
+ *
+ * Desktop: plain text links with a single underline that slides to the section
+ * you are reading, so the nav doubles as a "you are here" indicator. The
+ * accent colour switcher is three visible dots, one click each, instead of
+ * a hidden dropdown. Mobile: the menu opens as a full-screen list of huge
+ * links, the same typographic language as the rest of the site.
+ */
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -18,21 +28,66 @@ const NAV_LINKS = [
 ];
 
 const ACCENT_OPTIONS: { id: AccentTheme; label: string; dot: string }[] = [
-  { id: "lime", label: "Electric Lime", dot: "#bef264" },
-  { id: "violet", label: "Subtle Violet", dot: "#a78bfa" },
-  { id: "cyan", label: "Electric Cyan", dot: "#22d3ee" },
+  { id: "lime", label: "Electric lime", dot: "#bef264" },
+  { id: "violet", label: "Subtle violet", dot: "#a78bfa" },
+  { id: "cyan", label: "Electric cyan", dot: "#22d3ee" },
 ];
 
 interface NavbarProps {
   onOpenCommandPalette: () => void;
 }
 
+function AccentSwitcher({
+  accent,
+  setAccent,
+}: {
+  accent: AccentTheme;
+  setAccent: (a: AccentTheme) => void;
+}) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Accent colour"
+      className="flex items-center gap-2.5"
+    >
+      {ACCENT_OPTIONS.map((opt) => {
+        const selected = accent === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={opt.label}
+            title={opt.label}
+            onClick={() => setAccent(opt.id)}
+            className={`flex h-5 w-5 items-center justify-center rounded-full border transition ${
+              selected
+                ? "border-white/70"
+                : "border-transparent hover:border-white/30"
+            }`}
+          >
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: opt.dot }}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Navbar({ onOpenCommandPalette }: NavbarProps) {
+  const prefersReduced = useReducedMotion();
+  const reduce = !!prefersReduced;
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [paletteMenuOpen, setPaletteMenuOpen] = useState(false);
+  const [activeHref, setActiveHref] = useState("#home");
   const { accent, setAccent } = useAccentTheme();
 
+  // Header background after scrolling a little
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -40,6 +95,24 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Track which section is in the middle of the screen
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveHref(`#${entry.target.id}`);
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+    );
+    NAV_LINKS.forEach((item) => {
+      const el = document.getElementById(item.href.slice(1));
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  // Close the mobile menu on resize to desktop
   useEffect(() => {
     const onResize = () => {
       if (window.innerWidth >= 1024) setMobileOpen(false);
@@ -48,179 +121,186 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Lock page scroll and allow Escape while the mobile menu is open
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${
-        scrolled
-          ? "border-b border-white/[0.08] bg-[#07080a]/80 backdrop-blur-xl"
-          : "bg-transparent"
-      }`}
-    >
-      <nav
-        aria-label="Primary navigation"
-        className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
+          scrolled
+            ? "border-b border-white/[0.08] bg-[#07080a]/85 backdrop-blur-md"
+            : "bg-transparent"
+        }`}
       >
-        {/* Brand mark */}
-        <a
-          href="#home"
-          className="group flex items-center gap-2.5 focus:outline-none"
+        <nav
+          aria-label="Primary navigation"
+          className="mx-auto flex h-16 max-w-[1600px] items-center justify-between px-4 sm:px-8 lg:px-12"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] font-display text-sm font-bold tracking-tight text-white transition group-hover:border-[var(--accent)] group-hover:text-[var(--accent)]">
-            {siteConfig.person.initials}
-          </span>
-          <span className="hidden font-display text-sm font-semibold tracking-tight text-white sm:inline-block">
+          <a
+            href="#home"
+            className="font-display text-base font-semibold tracking-tight text-white transition-colors hover:text-[var(--accent)]"
+          >
             {siteConfig.person.name}
-          </span>
-        </a>
+          </a>
 
-        {/* Desktop links */}
-        <ul className="hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((item) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                className="rounded-lg px-3 py-1.5 text-sm text-[var(--text-secondary)] transition hover:bg-white/[0.04] hover:text-white"
-              >
-                <ScrambleText text={item.label} />
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2">
-          {/* Accent theme switcher */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setPaletteMenuOpen((v) => !v)}
-              aria-label="Switch accent theme"
-              aria-expanded={paletteMenuOpen}
-              className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-2.5 text-xs text-[var(--text-secondary)] transition hover:border-white/25 hover:text-white"
-            >
-              <span
-                className="h-2.5 w-2.5 rounded-full bg-[var(--accent)] accent-transition"
-                aria-hidden="true"
-              />
-              <Palette className="h-3.5 w-3.5 hidden sm:block" />
-            </button>
-
-            {paletteMenuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 w-44 rounded-xl border border-white/12 bg-[#0d0f14]/95 p-1.5 shadow-2xl backdrop-blur-xl"
-              >
-                <p className="px-2.5 py-1 font-mono-code text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
-                  Accent Theme
-                </p>
-                {ACCENT_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    role="menuitemradio"
-                    aria-checked={accent === opt.id}
-                    onClick={() => {
-                      setAccent(opt.id);
-                      setPaletteMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
-                      accent === opt.id
-                        ? "bg-white/10 text-white"
-                        : "text-[var(--text-secondary)] hover:bg-white/5 hover:text-white"
+          {/* Desktop links with one sliding underline */}
+          <ul className="hidden items-center gap-7 lg:flex">
+            {NAV_LINKS.map((item) => {
+              const isActive = activeHref === item.href;
+              return (
+                <li key={item.href} className="relative">
+                  <a
+                    href={item.href}
+                    aria-current={isActive ? "location" : undefined}
+                    className={`block py-2 text-sm transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-[var(--text-secondary)] hover:text-white"
                     }`}
                   >
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: opt.dot }}
-                      />
-                      {opt.label}
-                    </span>
-                    {accent === opt.id && (
-                      <span className="font-mono-code text-[10px] text-[var(--accent)]">
-                        ON
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Command Palette trigger */}
-          <button
-            type="button"
-            onClick={onOpenCommandPalette}
-            aria-label="Open command palette (Ctrl or Cmd + K)"
-            className="hidden h-9 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-2.5 font-mono-code text-xs text-[var(--text-secondary)] transition hover:border-white/25 hover:text-white sm:flex"
-          >
-            <Command className="h-3.5 w-3.5" />
-            <span>K</span>
-          </button>
-
-          {/* Highlighted Let's Talk CTA */}
-          <MagneticButton
-            href="#contact"
-            className="hidden rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-[var(--accent-fg)] shadow-[0_0_24px_rgba(var(--accent-rgb),0.22)] hover:bg-[var(--accent-bright)] sm:inline-flex accent-transition"
-          >
-            <span>Let&apos;s Talk</span>
-            <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </MagneticButton>
-
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={mobileOpen}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-white lg:hidden"
-          >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile navigation drawer */}
-      {mobileOpen && (
-        <div className="border-b border-white/10 bg-[#07080a]/95 px-4 pb-6 pt-3 backdrop-blur-xl lg:hidden">
-          <ul className="flex flex-col gap-1">
-            {NAV_LINKS.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-[var(--text-secondary)] transition hover:bg-white/[0.05] hover:text-white"
-                >
-                  <span>{item.label}</span>
-                  <ArrowUpRight className="h-3.5 w-3.5 opacity-50" />
-                </a>
-              </li>
-            ))}
+                    {item.label}
+                  </a>
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-underline"
+                      aria-hidden="true"
+                      transition={
+                        reduce
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 420, damping: 36 }
+                      }
+                      className="absolute inset-x-0 -bottom-0.5 h-px bg-[var(--accent)]"
+                    />
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
-          <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4">
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:block">
+              <AccentSwitcher accent={accent} setAccent={setAccent} />
+            </div>
+
             <button
               type="button"
-              onClick={() => {
-                setMobileOpen(false);
-                onOpenCommandPalette();
-              }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2.5 font-mono-code text-xs text-white"
+              onClick={onOpenCommandPalette}
+              aria-label="Open command palette (Ctrl or Cmd + K)"
+              className="hidden items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-white lg:flex"
             >
-              <Command className="h-3.5 w-3.5" />
-              Command Palette
+              <Command className="h-3.5 w-3.5" aria-hidden="true" />
+              K
             </button>
-            <a
+
+            <MagneticButton
               href="#contact"
-              onClick={() => setMobileOpen(false)}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2.5 text-xs font-semibold text-[var(--accent-fg)]"
+              className="hidden rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[var(--accent-fg)] hover:bg-[var(--accent-bright)] accent-transition sm:inline-flex"
             >
-              Let&apos;s Talk
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </a>
+              <span>Let&apos;s talk</span>
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+            </MagneticButton>
+
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open navigation menu"
+              aria-expanded={mobileOpen}
+              className="text-sm font-medium text-white lg:hidden"
+            >
+              Menu
+            </button>
           </div>
-        </div>
-      )}
-    </header>
+        </nav>
+      </header>
+
+      {/* Mobile: full-screen menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0 : 0.25 }}
+            className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[#07080a] px-4 pb-8 pt-5 sm:px-8 lg:hidden"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-display text-base font-semibold text-white">
+                {siteConfig.person.name}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close navigation menu"
+                autoFocus
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-white"
+              >
+                Close
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <ul className="my-auto py-10">
+              {NAV_LINKS.map((item, i) => {
+                const isActive = activeHref === item.href;
+                return (
+                  <li key={item.href} className="overflow-hidden">
+                    <motion.a
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      initial={reduce ? false : { y: "110%" }}
+                      animate={{ y: 0 }}
+                      transition={{
+                        delay: reduce ? 0 : 0.05 + i * 0.045,
+                        duration: 0.5,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      aria-current={isActive ? "location" : undefined}
+                      className={`block py-1 font-display text-[clamp(2.5rem,12vw,4.5rem)] font-bold leading-[1.05] tracking-tight transition-colors ${
+                        isActive
+                          ? "text-[var(--accent)]"
+                          : "text-white hover:text-[var(--accent)]"
+                      }`}
+                    >
+                      {item.label}
+                    </motion.a>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="flex flex-wrap items-center justify-between gap-5 border-t border-white/12 pt-6">
+              <AccentSwitcher accent={accent} setAccent={setAccent} />
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  onOpenCommandPalette();
+                }}
+                className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-white"
+              >
+                <Command className="h-4 w-4" aria-hidden="true" />
+                Command palette
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

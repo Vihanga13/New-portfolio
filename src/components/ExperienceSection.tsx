@@ -115,7 +115,7 @@ export function ExperienceSection() {
 
   return (
     <section id="experience" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div className="mb-12 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-16">
           <h2 className="text-sm text-[var(--text-muted)] lg:col-span-4">
             Experience

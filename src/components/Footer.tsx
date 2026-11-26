@@ -25,7 +25,7 @@ export function Footer() {
       ref={footerRef}
       className="relative overflow-hidden border-t border-white/[0.08] bg-[#060709] pt-16 pb-10"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div>
             <p className="font-display text-sm font-semibold text-white">

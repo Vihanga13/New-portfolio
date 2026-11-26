@@ -107,7 +107,7 @@ export function ContactSection() {
 
   return (
     <section id="contact" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <h2 className="max-w-5xl font-display text-[clamp(2.25rem,6.5vw,6rem)] font-bold leading-[1.02] tracking-tight text-white">
           {siteConfig.contact.heading}
         </h2>
