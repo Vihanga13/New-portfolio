@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Terminal as TerminalIcon, ArrowRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import confetti from "canvas-confetti";
 import { siteConfig } from "@/data/site";
 import { projectsData } from "@/data/projects";
-import { GlowCard } from "./ui/GlowCard";
+
+/**
+ * TERMINAL CONCEPT: "Ask the site"
+ *
+ * Same commands as before, but without the fake terminal window (no title bar,
+ * no glow card, no tiny mono text). It is one big prompt line: type a command
+ * or pick one, and the answer prints below in readable text with a link that
+ * jumps to the matching section.
+ */
 
 interface TerminalEntry {
   id: number;
@@ -26,6 +34,8 @@ const QUICK_COMMANDS = [
   "clear",
 ];
 
+const MAX_ENTRIES = 4;
+
 export function TerminalSection() {
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<TerminalEntry[]>([
@@ -33,8 +43,8 @@ export function TerminalSection() {
       id: 1,
       command: "help",
       lines: [
-        "Available commands: about, skills, projects, contact, whoami, clear, sudo hire vihanga",
-        "Tip: Click a preset command below or type directly and press Enter.",
+        "Available commands: about, skills, projects, contact, whoami, clear, sudo hire vihanga.",
+        "Tip: pick a command below or type one and press Enter.",
       ],
     },
   ]);
@@ -58,18 +68,18 @@ export function TerminalSection() {
     switch (cmd) {
       case "help":
         lines = [
-          "about             — Education, focus, and engineering summary",
-          "skills            — Core frontend, backend, mobile, cloud & AI stack",
-          "projects          — 5 featured case studies (SkillForz, Nutritious App, …)",
-          "contact           — Location, profiles, and direct contact section",
-          "whoami            — Quick developer identity readout",
-          "sudo hire vihanga — Trigger celebration & jump to contact",
-          "clear             — Reset terminal output",
+          "about: education, focus and a short engineering summary",
+          "skills: my frontend, backend, mobile, cloud and AI stack",
+          `projects: ${projectsData.length} featured case studies`,
+          "contact: location, profiles and the contact form",
+          "whoami: a quick identity readout",
+          "sudo hire vihanga: a small celebration, then the contact section",
+          "clear: reset this output",
         ];
         break;
       case "about":
         lines = [
-          `${siteConfig.person.name} — ${siteConfig.person.shortTitle}`,
+          `${siteConfig.person.name}, ${siteConfig.person.shortTitle}`,
           `Education: ${siteConfig.education.degree} (${siteConfig.education.classification}, ${siteConfig.education.graduation})`,
           `${siteConfig.education.institution} in collaboration with the University of Plymouth, UK.`,
         ];
@@ -81,27 +91,31 @@ export function TerminalSection() {
           (cat) => `${cat.title}: ${cat.skills.join(", ")}`
         );
         actionHref = "#skills";
-        actionLabel = "Explore Skills Bento";
+        actionLabel = "Jump to Skills";
         break;
       case "projects":
         lines = projectsData.map(
-          (p) => `${p.number}. ${p.title} [${p.category}] — ${p.tagline}`
+          (p) => `${p.title} (${p.category}): ${p.tagline}`
         );
         actionHref = "#projects";
-        actionLabel = "View Projects";
+        actionLabel = "Jump to Projects";
         break;
-      case "contact":
+      case "contact": {
+        const linkedInHref = siteConfig.socials.find(
+          (s) => s.platform === "linkedin"
+        )?.href;
         lines = [
           `Location: ${siteConfig.person.location}`,
-          `LinkedIn: ${siteConfig.socials.find((s) => s.platform === "linkedin")?.href}`,
+          `LinkedIn: ${linkedInHref ?? "see the Contact section"}`,
           `GitHub: ${siteConfig.github.profileUrl}`,
           siteConfig.contact.email
             ? `Email: ${siteConfig.contact.email}`
-            : "Email: Use the Contact form below (configurable in data/site.ts).",
+            : "Email: use the contact form (configurable in data/site.ts).",
         ];
         actionHref = "#contact";
-        actionLabel = "Go to Contact Form";
+        actionLabel = "Jump to Contact";
         break;
+      }
       case "whoami":
         lines = [
           `vihanga@colombo:~$ ${siteConfig.person.name}`,
@@ -111,11 +125,11 @@ export function TerminalSection() {
         break;
       case "sudo hire vihanga":
         lines = [
-          "[sudo] access granted: Let's build something impactful together.",
-          "Launching confetti… Ready to collaborate on Web, Mobile, and AI projects.",
+          "Access granted. Let's build something impactful together.",
+          "Ready to collaborate on web, mobile and AI projects.",
         ];
         actionHref = "#contact";
-        actionLabel = "Open Contact Section";
+        actionLabel = "Open the contact section";
         try {
           const reduced = window.matchMedia(
             "(prefers-reduced-motion: reduce)"
@@ -133,12 +147,12 @@ export function TerminalSection() {
         break;
       default:
         lines = [
-          `Command not found: "${cmd}". Type "help" to see available commands.`,
+          `Command not found: "${cmd}". Type "help" to see what is available.`,
         ];
     }
 
     setHistory((prev) => [
-      ...prev.slice(-6),
+      ...prev.slice(-(MAX_ENTRIES - 1)),
       {
         id: counterRef.current++,
         command: cmd,
@@ -151,87 +165,110 @@ export function TerminalSection() {
   };
 
   return (
-    <section aria-label="Interactive developer terminal" className="pb-20">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
-        <GlowCard className="overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-2.5">
-              <TerminalIcon className="h-4 w-4 text-[var(--accent)]" />
-              <span className="font-mono-code text-xs font-medium text-white">
-                vihanga-cli — interactive shell
-              </span>
-            </div>
+    <section aria-label="Quick answers" className="relative py-24 sm:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 border-t border-white/12 pt-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-4">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Skip the scrolling
+            </h2>
+            <p className="mt-4 max-w-sm text-base leading-relaxed text-[var(--text-secondary)]">
+              Type a command, or pick one, to get a short answer and a link to
+              that part of the site.
+            </p>
 
-            <div className="flex flex-wrap items-center gap-1.5">
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-3">
               {QUICK_COMMANDS.map((cmd) => (
-                <button
-                  key={cmd}
-                  type="button"
-                  onClick={() => runCommand(cmd)}
-                  className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 font-mono-code text-[11px] text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-white"
-                >
-                  {cmd}
-                </button>
+                <li key={cmd}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      runCommand(cmd);
+                      inputRef.current?.focus();
+                    }}
+                    className="border-b border-white/25 pb-0.5 text-sm text-white transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  >
+                    {cmd}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
-          <div
-            onClick={() => inputRef.current?.focus()}
-            className="cursor-text p-4 font-mono-code text-xs leading-relaxed sm:p-6 sm:text-[13px]"
-          >
-            <div className="space-y-4">
+          <div className="lg:col-span-8">
+            {/* Answers */}
+            <div
+              role="log"
+              aria-live="polite"
+              aria-label="Command output"
+              className="min-h-[12rem] space-y-8"
+            >
+              {history.length === 0 && (
+                <p className="text-base text-[var(--text-muted)]">
+                  Nothing here yet. Type &quot;help&quot; to see what you can
+                  ask.
+                </p>
+              )}
+
               {history.map((entry) => (
-                <div key={entry.id} className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-white">
-                    <span className="text-[var(--accent)]">❯</span>
-                    <span>{entry.command}</span>
-                  </div>
-                  <div className="space-y-1 pl-4 text-[var(--text-secondary)]">
+                <div key={entry.id}>
+                  <p className="font-display text-2xl font-semibold text-[var(--accent)]">
+                    <span aria-hidden="true">&rsaquo; </span>
+                    {entry.command}
+                  </p>
+                  <div className="mt-3 space-y-1.5 text-base leading-relaxed text-[var(--text-secondary)]">
                     {entry.lines.map((line, i) => (
                       <p key={i}>{line}</p>
                     ))}
-                    {entry.actionHref && (
-                      <a
-                        href={entry.actionHref}
-                        className="mt-1 inline-flex items-center gap-1 text-[var(--accent)] hover:underline"
-                      >
-                        {entry.actionLabel}
-                        <ArrowRight className="h-3 w-3" />
-                      </a>
-                    )}
                   </div>
+                  {entry.actionHref && (
+                    <a
+                      href={entry.actionHref}
+                      className="group mt-4 inline-flex items-center gap-1 border-b border-white/30 pb-0.5 text-sm text-white transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    >
+                      {entry.actionLabel}
+                      <ArrowUpRight
+                        className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
 
+            {/* Prompt */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 runCommand(input);
               }}
-              className="mt-4 flex items-center gap-2 border-t border-white/10 pt-3"
+              className="mt-10 flex items-baseline gap-3 border-b-2 border-white/30 pb-3 transition-colors focus-within:border-[var(--accent)]"
             >
               <label htmlFor="portfolio-terminal-input" className="sr-only">
-                Terminal command input
+                Type a command
               </label>
-              <span className="text-[var(--accent)]">❯</span>
+              <span
+                aria-hidden="true"
+                className="font-display text-[clamp(1.5rem,3.4vw,2.5rem)] text-[var(--accent)]"
+              >
+                &rsaquo;
+              </span>
               <input
                 ref={inputRef}
                 id="portfolio-terminal-input"
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder='Type a command (e.g. "about", "projects", "sudo hire vihanga")…'
+                placeholder='try "projects"'
                 autoComplete="off"
                 spellCheck={false}
-                className="w-full bg-transparent text-white placeholder:text-[var(--text-muted)] focus:outline-none"
+                className="w-full bg-transparent font-display text-[clamp(1.5rem,3.4vw,2.5rem)] text-white placeholder:text-white/25 focus:outline-none"
               />
             </form>
           </div>
-        </GlowCard>
+        </div>
       </div>
     </section>
   );
 }
-
