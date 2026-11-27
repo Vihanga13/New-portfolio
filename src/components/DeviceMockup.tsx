@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ImageIcon, Smartphone, Globe, Sparkles, Shield, Search } from "lucide-react";
+import { ImageIcon, Smartphone, Globe, Sparkles, Shield } from "lucide-react";
 import { ProjectItem } from "@/data/projects";
 
 interface DeviceMockupProps {
@@ -93,43 +93,6 @@ function PlaceholderCanvas({
     );
   }
 
-  if (project.id === "skillforz") {
-    return (
-      <div className="flex h-full flex-col justify-between bg-gradient-to-br from-[#131720] via-[#0c0e14] to-[#090a0f] p-4 text-left">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[10px] text-[var(--text-secondary)]">
-            <Search className="h-3 w-3 text-[var(--accent)]" />
-            <span>Search roles, employers…</span>
-          </div>
-          <span className="rounded-md bg-[var(--accent)] px-2 py-1 font-mono-code text-[9px] font-semibold text-[var(--accent-fg)]">
-            Post Vacancy
-          </span>
-        </div>
-
-        <div className="my-3 grid grid-cols-2 gap-2">
-          {["Job Seeker Portal", "Employer Hub", "Interview Flow", "Admin Panel"].map(
-            (tile) => (
-              <div
-                key={tile}
-                className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5"
-              >
-                <div className="h-1.5 w-8 rounded bg-[var(--accent)]/70" />
-                <p className="mt-2 font-mono-code text-[10px] text-white/90">
-                  {tile}
-                </p>
-              </div>
-            )
-          )}
-        </div>
-
-        <div className="flex items-center justify-between border-t border-white/10 pt-2.5 font-mono-code text-[9px] text-[var(--text-muted)]">
-          <span>Next.js Web + Neo-Brutalist Flutter</span>
-          <span>Placeholder UI</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-[#12151d] to-[#090b0f] p-5 text-center">
       <div className="mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl border border-white/12 bg-white/[0.04] text-[var(--accent)]">
@@ -153,7 +116,46 @@ export function DeviceMockup({ project, compact = false }: DeviceMockupProps) {
   const [imgError, setImgError] = useState(false);
   const hasRealImage = Boolean(project.screenshot) && !imgError;
 
-  // Phone frame for mobile Flutter projects
+  // Render full-bleed framed showcase when a project visual/screenshot exists
+  if (hasRealImage) {
+    return (
+      <div
+        className={`group relative flex w-full flex-col overflow-hidden rounded-xl border border-white/15 bg-[#0b0d12] shadow-xl ${
+          compact ? "h-48" : "aspect-[16/10] w-full"
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-3.5 py-2">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-white/25" />
+            <span className="h-2 w-2 rounded-full bg-white/25" />
+            <span className="h-2 w-2 rounded-full bg-white/25" />
+          </div>
+          <div className="flex items-center gap-1.5 rounded-md bg-white/[0.04] px-2.5 py-0.5 font-mono-code text-[10px] text-[var(--text-muted)]">
+            {project.frameType === "phone" ? (
+              <Smartphone className="h-3 w-3 text-[var(--accent)]" />
+            ) : (
+              <Globe className="h-3 w-3 text-[var(--accent)]" />
+            )}
+            <span>{project.slug}</span>
+          </div>
+          <span className="font-mono-code text-[9px] uppercase text-[var(--accent)]">
+            {project.frameType === "phone" ? "MOBILE" : "WEB"}
+          </span>
+        </div>
+        <div className="relative flex-1 overflow-hidden bg-[#07080a]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={project.screenshot!}
+            alt={`${project.title} showcase visual`}
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.02]"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Phone frame for mobile Flutter projects (placeholder fallback)
   if (project.frameType === "phone") {
     return (
       <div
@@ -169,24 +171,14 @@ export function DeviceMockup({ project, compact = false }: DeviceMockupProps) {
           {/* Phone notch / dynamic pill */}
           <div className="mx-auto mt-1.5 h-1.5 w-10 rounded-full bg-white/20" />
           <div className="mt-1.5 flex-1 overflow-hidden">
-            {hasRealImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={project.screenshot!}
-                alt={`${project.title} mobile screenshot`}
-                onError={() => setImgError(true)}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <PlaceholderCanvas project={project} isPhone={true} />
-            )}
+            <PlaceholderCanvas project={project} isPhone={true} />
           </div>
         </div>
       </div>
     );
   }
 
-  // Hybrid frame (SkillForz: browser + neo-brutalist Flutter phone badge)
+  // Hybrid frame (browser + companion phone badge)
   if (project.frameType === "hybrid") {
     return (
       <div

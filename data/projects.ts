@@ -14,7 +14,7 @@ export interface ProjectItem {
   badge?: string;
   isEditable?: boolean;
   /**
-   * Path under /public (e.g. "/images/projects/skillforz.png").
+   * Path under /public (e.g. "/images/projects/kalawewakayaking.png").
    * Keep `null` to display the styled interactive placeholder mockup.
    */
   screenshot: string | null;
@@ -38,45 +38,42 @@ export interface ProjectItem {
  */
 export const projectsData: ProjectItem[] = [
   {
-    id: "skillforz",
+    id: "kalawewakayaking",
     number: "01",
-    slug: "skillforz",
-    title: "SkillForz",
-    category: "Full-Stack Web Development / Personal Project",
-    tagline:
-      "Streamlined Sri Lankan recruitment portal & neo-brutalist Flutter companion",
+    slug: "kalawewakayaking",
+    title: "KalawewaKayaking",
+    category: "Web Development",
+    tagline: "Digital showcase for Kalawewa kayaking experiences & tours",
     description:
-      "SkillForz is a job portal platform inspired by Sri Lankan recruitment websites. It aims to connect job seekers and employers through a streamlined recruitment experience.",
-    technologies: ["Next.js", "React", "Tailwind CSS", "Flutter"],
-    frameType: "hybrid",
-    badge: "Personal Project",
-    screenshot: null,
-    secondaryScreenshot: null,
+      "A web project built for KalawewaKayaking to present kayaking tours, location highlights, and visitor inquiries through a clean, responsive interface.",
+    technologies: [],
+    technologiesNote: "Editable in data/projects.ts — add exact stack tags",
+    frameType: "browser",
+    badge: "Web Project",
+    isEditable: true,
+    screenshot: "/images/projects/kalawewakayaking.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
       overview:
-        "SkillForz is a comprehensive recruitment platform modeled around the real workflows of Sri Lankan job boards, supporting both candidates searching for roles and employers managing hiring pipelines. Alongside the Next.js web application, I am designing a Flutter mobile companion featuring a bold neo-brutalist visual direction.",
+        "KalawewaKayaking is a web project designed to showcase kayaking experiences at Kalawewa with clear tour information, visual storytelling, and an approachable inquiry flow across desktop and mobile devices.",
       problem:
-        "Traditional local job boards often suffer from cluttered layouts, fragmented application tracking, and inconsistent mobile experiences for both candidates and recruiters.",
+        "Helping visitors explore kayaking activities, understand session details, and reach out easily without cluttered navigation.",
       responsibilities: [
-        "Defining product requirements and user journeys for job seekers, employers, and administrators.",
-        "Designing the UI system across the web portal and the neo-brutalist Flutter mobile app.",
-        "Implementing responsive frontend interfaces with Next.js, React, and Tailwind CSS.",
+        "Designing and implementing the responsive web interface and layout structure.",
+        "Organizing tour details, visual presentation, and visitor inquiry touchpoints.",
+        "Editable slot: add exact KalawewaKayaking stack details, links, and screenshots in data/projects.ts.",
       ],
       features: [
-        "Job search and filtering",
-        "Job detail pages",
-        "Job seeker accounts",
-        "Employer accounts",
-        "Vacancy publishing",
-        "Applicant management",
-        "Interview management",
-        "Admin dashboard",
+        "Responsive landing & experience showcase",
+        "Clear tour and activity presentation",
+        "Mobile-friendly visitor inquiry flow",
       ],
       challenges: [
-        "Structuring clear, low-friction flows across three distinct user roles (candidates, employers, and admins).",
-        "Translating a clean web recruitment experience into a cohesive neo-brutalist Flutter mobile interface.",
+        "Balancing atmospheric outdoor storytelling with fast page load performance and mobile usability.",
+      ],
+      placeholderNotes: [
+        "Add exact technologies, live URL, repository link (if public), and screenshots in data/projects.ts.",
       ],
     },
   },
@@ -93,7 +90,7 @@ export const projectsData: ProjectItem[] = [
     technologies: ["Flutter", "Dart", "Python", "PyTorch", "Flask", "Firebase"],
     frameType: "phone",
     badge: "Final-Year Solo Project",
-    screenshot: null,
+    screenshot: "/images/projects/nutritious-app.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -134,7 +131,7 @@ export const projectsData: ProjectItem[] = [
     frameType: "browser",
     badge: "Professional Project",
     isEditable: true,
-    screenshot: null,
+    screenshot: "/images/projects/aigrow.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -173,7 +170,7 @@ export const projectsData: ProjectItem[] = [
     technologies: ["Flutter", "Dart", "Firebase Authentication", "Groq API"],
     frameType: "phone",
     badge: "Mobile + AI",
-    screenshot: null,
+    screenshot: "/images/projects/apptelic.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -213,7 +210,7 @@ export const projectsData: ProjectItem[] = [
     frameType: "browser",
     badge: "Web & Mobile",
     isEditable: true,
-    screenshot: null,
+    screenshot: "/images/projects/thumblyapp.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -258,7 +255,7 @@ export const projectsData: ProjectItem[] = [
     ],
     frameType: "phone",
     badge: "Solo Project",
-    screenshot: null,
+    screenshot: "/images/projects/waste-glass-collection.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -297,7 +294,7 @@ export const projectsData: ProjectItem[] = [
     technologies: ["PyQt5", "Firebase Realtime Database", "OpenCV2", "Python"],
     frameType: "browser",
     badge: "Group Project",
-    screenshot: null,
+    screenshot: "/images/projects/medsync.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -334,7 +331,7 @@ export const projectsData: ProjectItem[] = [
     technologies: ["Dart", "Flutter", "Firebase"],
     frameType: "phone",
     badge: "Group Project",
-    screenshot: null,
+    screenshot: "/images/projects/green-ride.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
@@ -369,7 +366,7 @@ export const projectsData: ProjectItem[] = [
     technologies: ["HTML", "CSS", "JavaScript", "PHP", "MySQL", "Google Maps API"],
     frameType: "browser",
     badge: "Group Project",
-    screenshot: null,
+    screenshot: "/images/projects/green-stay.jpg",
     liveUrl: null,
     githubUrl: null,
     caseStudy: {
