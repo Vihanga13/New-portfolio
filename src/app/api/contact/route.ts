@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { siteConfig } from "@/data/site";
 
 interface ContactPayload {
   name?: string;
@@ -48,13 +49,23 @@ export async function POST(request: Request) {
     );
   }
 
-  const webhookUrl = process.env.CONTACT_WEBHOOK_URL;
+  const webhookUrl =
+    process.env.CONTACT_WEBHOOK_URL || siteConfig.contact.formspreeEndpoint;
   if (webhookUrl) {
     try {
       const forwardRes = await fetch(webhookUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message }),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+          _replyto: email,
+        }),
       });
       if (!forwardRes.ok) {
         return NextResponse.json(

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ArrowUpRight, Loader2, Send } from "lucide-react";
 import { siteConfig } from "@/data/site";
+import { submitContactMessage } from "@/lib/contact";
 import { MagneticButton } from "./ui/MagneticButton";
 
 /**
@@ -49,57 +50,27 @@ export function ContactSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus(null);
-
-    if (name.trim().length < 2) {
-      setStatus({
-        type: "error",
-        text: "Please enter your name (at least 2 characters).",
-      });
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setStatus({
-        type: "error",
-        text: "Please enter a valid email address.",
-      });
-      return;
-    }
-    if (message.trim().length < 10) {
-      setStatus({
-        type: "error",
-        text: "Please write a message of at least 10 characters.",
-      });
-      return;
-    }
-
     setSubmitting(true);
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setStatus({
-          type: "error",
-          text: json.error || "Something went wrong. Please try again.",
-        });
-      } else {
-        setStatus({ type: "success", text: json.message });
-        setName("");
-        setEmail("");
-        setSubject("");
-        setMessage("");
-      }
-    } catch {
-      setStatus({
-        type: "error",
-        text: "Network error while submitting the form. Please try again.",
-      });
-    } finally {
-      setSubmitting(false);
+
+    const result = await submitContactMessage({
+      name,
+      email,
+      subject,
+      message,
+      source: "contact-form",
+    });
+
+    if (result.ok) {
+      setStatus({ type: "success", text: result.message });
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } else {
+      setStatus({ type: "error", text: result.message });
     }
+
+    setSubmitting(false);
   };
 
   const linkedIn = siteConfig.socials.find((s) => s.platform === "linkedin");

@@ -2,20 +2,19 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Loader2, Send } from "lucide-react";
 import confetti from "canvas-confetti";
 import { siteConfig } from "@/data/site";
 import { projectsData } from "@/data/projects";
+import { submitContactMessage } from "@/lib/contact";
 
 /**
  * QUICK ANSWERS CONCEPT: "Pick a question"
  *
- * Instead of a terminal, visitors see the questions a recruiter would ask,
- * set as big type. Pick one and the answer types itself out on the right.
- * Click the answer to skip the typing. Power users can still type the old
- * commands (about, skills, projects, contact, whoami, help, clear,
- * sudo hire vihanga) into the small input underneath.
- * Every answer is pulled from your real site data. Nothing is invented.
+ * Visitors see recruiter questions set as large type on the left and typed
+ * answers on the right. Power users can also type commands (`about`, `skills`,
+ * `projects`, `contact`, `message`, `whoami`, `help`, `clear`,
+ * `sudo hire vihanga`), and send a note directly via Formspree.
  */
 
 interface Answer {
@@ -23,6 +22,7 @@ interface Answer {
   lines: string[];
   actionHref?: string;
   actionLabel?: string;
+  showQuickSend?: boolean;
 }
 
 const QUESTIONS = [
@@ -31,17 +31,18 @@ const QUESTIONS = [
   { label: "What have you built?", cmd: "projects" },
   { label: "Are you available?", cmd: "whoami" },
   { label: "How do I reach you?", cmd: "contact" },
+  { label: "Send a quick note", cmd: "message" },
   { label: "Can I hire you?", cmd: "sudo hire vihanga" },
 ];
 
-function getAnswer(cmd: string): Answer | null {
+function getAnswer(cmd: string): Answer {
   switch (cmd) {
     case "about":
       return {
         title: "Who are you?",
         lines: [
           `${siteConfig.person.name}, ${siteConfig.person.shortTitle}.`,
-          `${siteConfig.education.degree} (${siteConfig.education.classification}, ${siteConfig.education.graduation}) at ${siteConfig.education.institution}, in collaboration with the University of Plymouth, UK.`,
+          `${siteConfig.education.degree} (${siteConfig.education.classification}, ${siteConfig.education.graduation}) at ${siteConfig.education.institution}, in collaboration with ${siteConfig.education.partner}.`,
         ],
         actionHref: "#about",
         actionLabel: "Read the full story",
@@ -81,33 +82,50 @@ function getAnswer(cmd: string): Answer | null {
       return {
         title: "How do I reach you?",
         lines: [
-          `Location: ${siteConfig.person.location}`,
+          `Location: ${siteConfig.contact.location}`,
           `LinkedIn: ${linkedInHref ?? "see the Contact section"}`,
           `GitHub: ${siteConfig.github.profileUrl}`,
           siteConfig.contact.email
             ? `Email: ${siteConfig.contact.email}`
             : "Email: use the contact form (configurable in data/site.ts).",
+          ...(siteConfig.contact.phone
+            ? [`Phone: ${siteConfig.contact.phone}`]
+            : []),
         ],
         actionHref: "#contact",
-        actionLabel: "Open the contact form",
+        actionLabel: "Open the full contact form",
+        showQuickSend: true,
       };
     }
+    case "message":
+    case "send":
+    case "hire":
+      return {
+        title: "Send a quick note",
+        lines: [
+          "Drop your name, email, and message below to send directly to my inbox via Formspree.",
+        ],
+        actionHref: "#contact",
+        actionLabel: "Or jump to the Contact section",
+        showQuickSend: true,
+      };
     case "sudo hire vihanga":
       return {
         title: "Can I hire you?",
         lines: [
           "Access granted. Let's build something impactful together.",
-          "Ready to collaborate on web, mobile and AI projects.",
+          "Ready to collaborate on web, mobile and AI projects — send a quick note below or jump to Contact.",
         ],
         actionHref: "#contact",
-        actionLabel: "Start the conversation",
+        actionLabel: "Open full contact form",
+        showQuickSend: true,
       };
     case "help":
       return {
         title: "help",
         lines: [
           "Pick a question on the left, or type one of these commands:",
-          "about, skills, projects, contact, whoami, clear, sudo hire vihanga",
+          "about, skills, projects, contact, message, whoami, clear, sudo hire vihanga",
         ],
       };
     default:
@@ -129,6 +147,16 @@ export function TerminalSection() {
   const [typed, setTyped] = useState(0);
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Inline quick-send Formspree state
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [senderMessage, setSenderMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const fullText = useMemo(
     () => (answer ? answer.lines.join("\n") : ""),
@@ -164,12 +192,14 @@ export function TerminalSection() {
       setAnswer(null);
       setActiveCmd(null);
       setInput("");
+      setSendStatus(null);
       return;
     }
 
     setActiveCmd(cmd);
     setAnswer(getAnswer(cmd));
     setInput("");
+    setSendStatus(null);
 
     if (cmd === "sudo hire vihanga") {
       try {
@@ -185,9 +215,37 @@ export function TerminalSection() {
     }
   };
 
+  const handleQuickSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSendStatus(null);
+    setSending(true);
+
+    const result = await submitContactMessage({
+      name: senderName,
+      email: senderEmail,
+      subject:
+        activeCmd === "sudo hire vihanga"
+          ? "Hiring inquiry from Terminal"
+          : "Quick note from Terminal",
+      message: senderMessage,
+      source: "terminal",
+    });
+
+    if (result.ok) {
+      setSendStatus({ type: "success", text: result.message });
+      setSenderName("");
+      setSenderEmail("");
+      setSenderMessage("");
+    } else {
+      setSendStatus({ type: "error", text: result.message });
+    }
+
+    setSending(false);
+  };
+
   return (
     <section aria-label="Quick answers" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 gap-12 border-t border-white/12 pt-12 lg:grid-cols-12 lg:gap-16">
           {/* Left: the questions */}
           <div className="lg:col-span-5">
@@ -236,7 +294,7 @@ export function TerminalSection() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder='or type a command, e.g. "help"'
+                placeholder='or type a command, e.g. "message" or "help"'
                 autoComplete="off"
                 spellCheck={false}
                 className="w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
@@ -269,7 +327,122 @@ export function TerminalSection() {
                   {fullText}
                 </p>
 
-                {answer.actionHref && !isTyping && (
+                {/* Inline Formspree quick-send form */}
+                {answer.showQuickSend && !isTyping && (
+                  <form
+                    onSubmit={handleQuickSend}
+                    noValidate
+                    className="mt-8 max-w-xl space-y-5 border-t border-white/12 pt-6"
+                  >
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <label
+                          htmlFor="terminal-sender-name"
+                          className="block text-xs text-[var(--text-muted)]"
+                        >
+                          Your name
+                        </label>
+                        <input
+                          id="terminal-sender-name"
+                          type="text"
+                          required
+                          value={senderName}
+                          onChange={(e) => setSenderName(e.target.value)}
+                          placeholder="Jane Doe"
+                          className="mt-1.5 w-full border-0 border-b border-white/25 bg-transparent pb-2 text-sm text-white placeholder:text-white/25 focus:border-[var(--accent)] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="terminal-sender-email"
+                          className="block text-xs text-[var(--text-muted)]"
+                        >
+                          Your email
+                        </label>
+                        <input
+                          id="terminal-sender-email"
+                          type="email"
+                          required
+                          value={senderEmail}
+                          onChange={(e) => setSenderEmail(e.target.value)}
+                          placeholder="you@company.com"
+                          className="mt-1.5 w-full border-0 border-b border-white/25 bg-transparent pb-2 text-sm text-white placeholder:text-white/25 focus:border-[var(--accent)] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="terminal-sender-message"
+                        className="block text-xs text-[var(--text-muted)]"
+                      >
+                        Message
+                      </label>
+                      <textarea
+                        id="terminal-sender-message"
+                        rows={2}
+                        required
+                        value={senderMessage}
+                        onChange={(e) => setSenderMessage(e.target.value)}
+                        placeholder="Quick note about a role, project, or collaboration..."
+                        className="mt-1.5 w-full resize-y border-0 border-b border-white/25 bg-transparent pb-2 text-sm text-white placeholder:text-white/25 focus:border-[var(--accent)] focus:outline-none"
+                      />
+                    </div>
+
+                    {sendStatus && (
+                      <p
+                        role="status"
+                        aria-live="polite"
+                        className={`border-l-2 pl-3 text-xs leading-relaxed ${
+                          sendStatus.type === "success"
+                            ? "border-[var(--accent)] text-white"
+                            : "border-rose-400 text-rose-200"
+                        }`}
+                      >
+                        {sendStatus.text}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <button
+                        type="submit"
+                        disabled={sending}
+                        className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-xs font-semibold text-[var(--accent-fg)] transition hover:bg-[var(--accent-bright)] disabled:opacity-60"
+                      >
+                        {sending ? (
+                          <>
+                            <Loader2
+                              className="h-3.5 w-3.5 animate-spin"
+                              aria-hidden="true"
+                            />
+                            <span>Sending...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Send via Formspree</span>
+                            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+                          </>
+                        )}
+                      </button>
+
+                      {answer.actionHref && (
+                        <a
+                          href={answer.actionHref}
+                          className="group inline-flex items-center gap-1 border-b border-white/30 pb-0.5 text-xs text-white transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                        >
+                          {answer.actionLabel}
+                          <ArrowUpRight
+                            className="h-3.5 w-3.5 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            aria-hidden="true"
+                          />
+                        </a>
+                      )}
+                    </div>
+                  </form>
+                )}
+
+                {!answer.showQuickSend && answer.actionHref && !isTyping && (
                   <a
                     href={answer.actionHref}
                     className="group mt-8 inline-flex items-center gap-1 border-b border-white/30 pb-0.5 text-sm text-white transition hover:border-[var(--accent)] hover:text-[var(--accent)]"

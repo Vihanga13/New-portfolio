@@ -106,6 +106,7 @@ export interface SiteConfig {
     supportingText: string;
     email: string | null;
     phone: string | null;
+    formspreeEndpoint: string | null;
     emailPlaceholderHint: string;
     location: string;
     formEndpointNote: string;
@@ -220,10 +221,11 @@ export const siteConfig: SiteConfig = {
       "I'm always interested in exploring exciting projects, collaborating with talented people and discussing new opportunities.",
     email: "vihaax23@gmail.com",
     phone: "+94 71 254 7892",
+    formspreeEndpoint: "https://formspree.io/f/mqpqjnvz",
     emailPlaceholderHint: "Configure your email address in data/site.ts",
     location: "Moratuwa, Colombo, Sri Lanka",
     formEndpointNote:
-      "Messages validate immediately and connect cleanly once an email transport or webhook is configured.",
+      "Messages are sent directly via Formspree to Vihanga's inbox.",
   },
 
   socials: [
