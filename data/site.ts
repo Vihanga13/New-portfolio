@@ -71,6 +71,7 @@ export interface SiteConfig {
     };
     portraitImage: string | null;
     portraitAlt: string;
+    logoImage: string | null;
     cvPath: string;
     cvFileName: string;
   };
@@ -154,6 +155,7 @@ export const siteConfig: SiteConfig = {
     // Replace `null` with "/images/portrait.jpg" once you add a professional portrait in /public/images/
     portraitImage: "/images/portrait.jpg",
     portraitAlt: "Vihanga Nilusha — Software Engineer",
+    logoImage: "/images/logo-vn.jpg",
     cvPath: "/cv/Vihanga-Nilusha-CV.pdf",
     cvFileName: "Vihanga-Nilusha-CV.pdf",
   },

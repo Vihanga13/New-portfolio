@@ -78,6 +78,34 @@ function AccentSwitcher({
   );
 }
 
+function BrandMark() {
+  const [imgError, setImgError] = useState(false);
+  const logoSrc = siteConfig.person.logoImage;
+
+  return (
+    <span className="inline-flex items-center gap-2.5">
+      {logoSrc && !imgError ? (
+        <span className="flex h-9 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/12 bg-black">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={logoSrc}
+            alt={`${siteConfig.person.name} logo`}
+            onError={() => setImgError(true)}
+            className="h-full w-full scale-[1.55] object-cover object-center"
+          />
+        </span>
+      ) : (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-black font-display text-xs font-bold text-[var(--accent)]">
+          {siteConfig.person.initials}
+        </span>
+      )}
+      <span className="font-display text-base font-semibold tracking-tight text-white transition-colors group-hover:text-[var(--accent)]">
+        {siteConfig.person.name}
+      </span>
+    </span>
+  );
+}
+
 export function Navbar({ onOpenCommandPalette }: NavbarProps) {
   const prefersReduced = useReducedMotion();
   const reduce = !!prefersReduced;
@@ -151,9 +179,9 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
         >
           <a
             href="#home"
-            className="font-display text-base font-semibold tracking-tight text-white transition-colors hover:text-[var(--accent)]"
+            className="group inline-flex items-center focus:outline-none"
           >
-            {siteConfig.person.name}
+            <BrandMark />
           </a>
 
           {/* Desktop links with one sliding underline */}
@@ -240,9 +268,7 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
             className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-[#07080a] px-4 pb-8 pt-5 sm:px-8 lg:hidden"
           >
             <div className="flex items-center justify-between">
-              <span className="font-display text-base font-semibold text-white">
-                {siteConfig.person.name}
-              </span>
+              <BrandMark />
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
